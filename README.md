@@ -27,3 +27,7 @@ The script can be run on a cluster or on a multi-core machine using the followin
 where <number_of_processes> is the number of processes to be used in parallelization, <id_of_experiment> is the experiment wanted to run, and <random_seed> is the seed.
 
 The output of the code is saved in the current and output folder directory, which is created if it does not exist.
+
+## 3) videos
+
+This folder contains simulations of some remarkable examples in gif format. 
