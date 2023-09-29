@@ -28,6 +28,9 @@ where <number_of_processes> is the number of processes to be used in paralleliza
 
 The output of the code is saved in the current and output folder directory, which is created if it does not exist.
 
+## 2) Getting_Results_Coevolutive_ARM.ipynb
+In this notebook, we plot the results of the experiments. We can find the results for the asymptotic statistical quantities as a function of $P_r$ and $T$.
+
 ## 3) videos
 
 This folder contains simulations of some remarkable examples in gif format. 
