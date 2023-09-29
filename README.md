@@ -2,12 +2,13 @@
 
 The Coevolutionary Attraction-Repulsion Model with Mass Media is an agent-based model focused on opinion dynamics to study the polarization of a system. This model has been developed by Mateo Carpio and Mario Cosenza. 
 
-| Name     | Age | Location    |
+| Parameter     |  | Meaning    |
 |----------|-----|-------------|
-| Alice    | 25  | New York    |
-| Bob      | 30  | Los Angeles |
-| Charlie  | 22  | Chicago     |
-
+| Rewirin Probability | $P_r$  | Probability of having dynamics on the topology |
+| Tolerance      | `T` | Distance within which interactions are attractive and beyond which interactions are repulsive |
+| Exposure  | E  | Degree to which actors interact with differing points of view |
+| Responsiveness | R | Fractional distance an actor's ideological position moves as a result of an interaction
+| Number of agents  | `N` | Number of agents |
 
 ## 1) coevolution_arm.py
 
