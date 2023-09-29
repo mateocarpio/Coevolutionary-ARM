@@ -397,31 +397,57 @@ class process_data():
             f.write("average\t{:.6f}\t{:.6f}\t{:.6f}\n".format(prom_C_SM/self.iters, prom_SM/self.iters, prom_variance/self.iters))
 
 
-def evoluton(Pr, T):
+#Reproduces Figures 4.4 and 4.5
+def run_history(Pr, T):
     params = {'N' : [100], 'E' : [0.1], 'T' : [T], 'R' : [0.25], 'S' : [2000001], 'Pr' : [Pr]}
     exp = ARM_Coevolution(params, iters=1, seed=None, savehist=True)
     exp.arm_coe()
     results = process_data(Pr, T, iters=1, hist_saved=True, max_steps=2000001)
     results.save_stat()
+def exp_history_Pr_T(seed, n_cpu): #for parallelize
+    pool = mp.Pool(processes=n_cpu)
+    # Define ranges of B and X_M values
+    Pr_range = [0.00, 0.0005, 0.001, 0.005, 0.01, 0.05, 0.1]
+    T_range = [0.20, 0.25]
+    # Create a list of tuples containing all combinations of XM and B values
+    param_tuples = [(Pr, T) for Pr in Pr_range for T in T_range]
+    # Call run_asymptotic_SW for all parameter tuples using pool.map
+    results = pool.starmap(run_history, param_tuples)
+    # Close the pool
 
-def expA_Pr_T(Pr, T):
+#Reproduces Figures 4.6
+def run_asymptotic(Pr, T):
     params = {'N' : [100], 'E' : [0.1], 'T' : [T], 'R' : [0.25], 'S' : [2000001], 'Pr' : [Pr]}
     exp = ARM_Coevolution(params, iters=2, seed=None, savehist=False)
     exp.arm_coe()
     results = process_data(Pr, T, iters=2, hist_saved=False, max_steps=2000001)
     results.save_prom_parameters()
-
-if __name__ == "__main__":
-    #Number of laptop CPUs to be used
-    n_cpu = 2
+def exp_Pr_T(seed, n_cpu): #for parallelize
     # Call Pool
     pool = mp.Pool(processes=n_cpu)
-    # Define ranges of XM and B values
-    Pr_range = [0.5]
-    T_range = [0.20,0.25]
+    # Define ranges of B and X_M values
+    Pr_range = np.logspace(np.log10(0.0001), np.log10(0.9), num=100)
+    T_range = [0.10, 0.15, 0.20, 0.25]
     # Create a list of tuples containing all combinations of XM and B values
     param_tuples = [(Pr, T) for Pr in Pr_range for T in T_range]
-    # Call expC_grid for all parameter tuples using pool.map
-    results = pool.starmap(evoluton, param_tuples)
+    # Call run_asymptotic_SW for all parameter tuples using pool.map
+    results = pool.starmap(run_asymptotic, param_tuples)
     # Close the pool
     pool.close()
+
+if __name__ == "__main__":
+
+    parser = argparse.ArgumentParser(description=__doc__)
+
+    parser.add_argument('-n', '--ns', type=int, default=2, \
+        help="-takes the number of processes to be used in parallelization",)
+    parser.add_argument('-E', '--exps', type=str, nargs='+', required=True, \
+                        help='IDs of experiments to run')
+    parser.add_argument('-R', '--rand_seed', type=int, default=None, \
+                        help='Seed for random number generation')
+    args = parser.parse_args()
+    # Run selected experiments.
+    exps = {'exp_Pr_T' : exp_Pr_T, 'exp_history_Pr_T' : exp_history_Pr_T}
+
+    for id in args.exps:
+        exps[id](args.rand_seed,args.ns)
