@@ -8,7 +8,10 @@ import math
 from itertools import product
 import os
 import pickle
+from tkinter import Tcl
+import glob
 import multiprocessing as mp
+import argparse
 
 class ARM_Coevolution():
     def __init__(self, params, iters, seed, savehist=True):
@@ -240,25 +243,40 @@ class process_data():
         return pos
 
     def create_images(self):
+        
+        for step in range(0,self.max_steps+1,500):
 
-        with open(f"./outputfolder/{self.directory_name}/networks/network_iter-{self.iters}_step-{0}", "rb") as file:
+          try:
+            
+            file_path_network = "./outputfolder/"+ str(self.directory_name) + "/networks" + f"/net_iter-{self.iters - 1}_step-{step}"
 
-              G = pickle.load(file)
+            with open(file_path_network, "rb") as file:
 
-        pos = nx.spring_layout(G, scale=2, seed=213123)
-
-        for step in range(0,self.last_step+1,500):
-
-            try:
-              with open(f"./outputfolder/{self.directory_name}/networks/net_iter-{self.iters}_step-{step}", "rb") as file:
-
+                print(file_path)
+                
                 G = pickle.load(file)
+
+                if step == 0:
+
+                    pos = nx.spring_layout(G, scale=2, seed=213123)                
 
                 pos = self.create_subplots(G, pos, step)
 
-            except:
+          except:
 
-              break
+            break
+
+    def create_gif(self):
+
+        images_in = "./outputfolder/"+ str(self.directory_name) +"/figures/****.png"
+
+        gif_image_out = "./outputfolder/"+ str(self.directory_name) +"/animation_hist.gif"
+
+        imgs = (Image.open(f) for f in Tcl().call('lsort', '-dict', glob.glob(images_in)))
+
+        img = next(imgs)
+
+        img.save(fp = gif_image_out, format='GIF', append_images=imgs, save_all=True, duration=100, loop=0)
 
    #Identify the size of the maximum group and where it is located
     def maximum_group(self, frequency):
@@ -282,7 +300,6 @@ class process_data():
         return m, indexes
 
 
-
     #Get the variance, the maximum group and its difference with the MM
     def get_statistical_parameters(self, config):
 
@@ -300,6 +317,7 @@ class process_data():
     def save_stat(self):
 
         file_path = "./history_statistics/statistical_parameters_Pr_{:.5f}-T_{:.2f}.txt".format(round(self.Pr, 5), round(self.T, 2))
+        
         if not os.path.exists("./history_statistics"):
 
             os.makedirs("./history_statistics")
@@ -311,7 +329,8 @@ class process_data():
         for step in range(0,self.max_steps+1,100):
           
           try:
-            file_path_network = "./outputfolder/"+ str(self.directory_name) + "/networks" + f"/net_iter-{self.iters-1}_step-{step}"
+
+            file_path_network = "./outputfolder/"+ str(self.directory_name) + "/networks" + f"/net_iter-{self.iters - 1}_step-{step}"
 
     
             with open(file_path_network, "rb") as file:
@@ -354,6 +373,7 @@ class process_data():
 
                 pass
         C_SM, SM, variance = C_SM/counter, SM/counter, variance/counter 
+
         return  C_SM, SM, variance 
 
     def prom_iters(self):
@@ -397,13 +417,15 @@ class process_data():
             f.write("average\t{:.6f}\t{:.6f}\t{:.6f}\n".format(prom_C_SM/self.iters, prom_SM/self.iters, prom_variance/self.iters))
 
 
-#Reproduces Figures 4.4 and 4.5
+#Reproduces Figures 4.5 and 4.6
 def run_history(Pr, T):
     params = {'N' : [100], 'E' : [0.1], 'T' : [T], 'R' : [0.25], 'S' : [2000001], 'Pr' : [Pr]}
     exp = ARM_Coevolution(params, iters=1, seed=None, savehist=True)
     exp.arm_coe()
     results = process_data(Pr, T, iters=1, hist_saved=True, max_steps=2000001)
     results.save_stat()
+    results.create_images()
+    results.create_gif()
 def exp_history_Pr_T(seed, n_cpu): #for parallelize
     pool = mp.Pool(processes=n_cpu)
     # Define ranges of B and X_M values
@@ -415,7 +437,7 @@ def exp_history_Pr_T(seed, n_cpu): #for parallelize
     results = pool.starmap(run_history, param_tuples)
     # Close the pool
 
-#Reproduces Figures 4.6
+#Reproduces Figures 4.7
 def run_asymptotic(Pr, T):
     params = {'N' : [100], 'E' : [0.1], 'T' : [T], 'R' : [0.25], 'S' : [2000001], 'Pr' : [Pr]}
     exp = ARM_Coevolution(params, iters=2, seed=None, savehist=False)
